@@ -76,17 +76,23 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
 validation_loader = torch.utils.data.DataLoader(dataset=validation_dataset, 
                                           batch_size=test_batch_size, 
                                           shuffle=False)
+if not os.path.exists(directory):
+    os.makedirs(directory)
 
 model=network1()
 iteri=0
 iter_new=0 
-check=os.listdir(checkpoints_directory) #checking if checkpoints exist to resume training
-if len(check):
-    check.sort(key=lambda x:int((x.split('_')[2]).split('.')[0]))
+
+#checking if checkpoints exist to resume training and create it if not
+if not os.path.exists(checkpoints_directory):
+    checkpoints = os.listdir(checkpoints_directory)
+    checkpoints.sort(key=lambda x:int((x.split('_')[2]).split('.')[0]))
     model=torch.load(checkpoints_directory+'/'+check[-1])
     iteri=int(re.findall(r'\d+',check[-1])[0])
     iter_new=iteri
     print("Resuming from iteration " + str(iteri))
+else:
+    os.makedirs(checkpoints_directory)
 
 if torch.cuda.is_available(): #use gpu if available
     model.cuda() 
