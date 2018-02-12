@@ -3,8 +3,7 @@ import shutil
 import random
 import os
 
-#May the devil bring us good luck
-seed = 666
+seed = 42
 random.seed = seed
 np.random.seed = seed
 
