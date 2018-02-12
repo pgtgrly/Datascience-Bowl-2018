@@ -1,0 +1,8 @@
+*Placeholder for Git path*
+
+data/
+     stage1/
+            stage1_train
+            train
+            test
+            validation
