@@ -37,6 +37,8 @@ class ImageDataset(Dataset): #Defining the class to load datasets
 
     def __len__ (self):
             return len(os.listdir(self.input_dir))
+          
+        
 
     def __getitem__(self,idx):
         img_name= self.dirlist[idx]
@@ -59,8 +61,9 @@ class ImageDataset(Dataset): #Defining the class to load datasets
         return sample
 
 
-train_dataset=ImageDataset(input_dir=train_directory) #Training Dataset
-test_dataset=ImageDataset(input_dir=test_directory) #Testing Dataset
+train_dataset=ImageDataset(input_dir=train_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Training Dataset
+test_dataset=ImageDataset(input_dir=test_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Testing Dataset
+validation_dataset=ImageDataset(input_dir=validation_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Validation Dataset
 
 num_epochs = n_iters / (len(train_dataset) / batch_size)
 num_epochs = int(num_epochs)
