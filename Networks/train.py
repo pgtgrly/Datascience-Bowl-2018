@@ -11,9 +11,9 @@ from torchvision import transforms, utils
 import re
 from tensorboardX import SummaryWriter
 import time
+import glob
 import pandas as pd
 from Networks import network1
-
 
 writer = SummaryWriter()
 
@@ -27,43 +27,40 @@ checkpoints_directory="checkpoints"
 test_batch_size=50
 threshold=128
 
-
 class ImageDataset(Dataset): #Defining the class to load datasets
-
-    def __init__(self,input_dir,transform=None):
-        self.input_dir=input_dir
-        self.transform=transform
-        self.dirlist=os.listdir(self.input_dir).sort()
+    def __init__(self,stage=1, input_dir='train',transform=None):
+        self.input_dir = os.path.join("data/stage", str(stage), input_dir)        
+        self.transform = transform
+        self.dirlist = os.listdir(self.input_dir).sort()
 
     def __len__ (self):
-            return len(os.listdir(self.input_dir))
-          
-        
+        return len(os.listdir(self.input_dir))
 
     def __getitem__(self,idx):
-        img_name= self.dirlist[idx]
-        input_image=cv2.imread(self.input_dir+"/"+img_name) #correct this
+
+        img_id= self.dirlist[idx]
+        
+        input_image=cv2.imread(os.path.join(self.input_dir,img_id, "images", img_id + ".png"))
         input_image=cv2.resize(input_image,(64,64), interpolation = cv2.INTER_CUBIC)
         input_image= input_image.reshape((64,64,3)).transpose((2, 0, 1)) #The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
+        
+        mask_path = glob.glob(os.path.join(self.input_dir,img_id) + "*.png")     
+        no_of_masks = int(mask_path.split("_")[1])
 
-
-
-
-        output_image=cv2.imread(self.input_dir+"/"+img_name) #correct this
+        output_image=cv2.imread(mask_path)
         output_image=cv2.resize(output_image,(64,64), interpolation = cv2.INTER_CUBIC)
         output_image= output_image.reshape((64,64,1)).transpose((2, 0, 1))                                                                             
-        sample = {'input_image': input_image, 'output_image': output_image}  
 
+        sample = {'image': input_image, 'masks': output_image, 'count':no_of_masks}  
 
         if self.transform:
             sample= self.transform(sample)
 
         return sample
 
-
-train_dataset=ImageDataset(input_dir=train_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Training Dataset
-test_dataset=ImageDataset(input_dir=test_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Testing Dataset
-validation_dataset=ImageDataset(input_dir=validation_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Validation Dataset
+train_dataset=ImageDataset(stage=1, input_dir="train",transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Training Dataset
+test_dataset=ImageDataset(stage=1, input_dir="test",transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Testing Dataset
+validation_dataset=ImageDataset(stage=1, input_dir="validation",transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Validation Dataset
 
 num_epochs = n_iters / (len(train_dataset) / batch_size)
 num_epochs = int(num_epochs)
@@ -152,7 +149,34 @@ for epoch in range(num_epochs):
             time_since_beg=(time.time()-beg)/60
             print('Iteration: {}. Loss: {}. Test Loss: {}. Time(mins) {}'.format(iteri, loss.data[0], test_loss,time_since_beg))
         if iteri % 500 ==0:
+            '''
+            Apparently Optimizer saving is possible,but there is varied discussion
+            on the issue with some suggestions that the recent update fixed this.
+
+            https://discuss.pytorch.org/t/saving-and-loading-a-model-in-pytorch/2610/3
+            
+            http://pytorch.org/docs/0.3.0/notes/serialization.html
+
+            
+            Workaround discussed in https://github.com/pytorch/pytorch/issues/2830
+
+            model = Model()
+            model.load_state_dict(checkpoint['model'])
+            model.cuda()
+            optimizer = optim.Adam(model.parameters())
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            for state in optimizer.state.values():
+                for k, v in state.items():
+                    if torch.is_tensor(v):
+                        state[k] = v.cuda()
+
+            '''
+
             torch.save(model,'checkpoints/model_iter_'+str(iteri)+'.pt')
+            
+            # Alternative lower overhead save 
+            # torch.save(model.state_dict(),'checkpoints/model_iter_'+str(iteri)+'.pt')
+
             print("model saved at iteration : "+str(iteri))
             writer.export_scalars_to_json("graphs/all_scalars_"+str(iter_new)+".json") #saving loss vs iteration data to be used by visualise.py
     scheduler.step()            

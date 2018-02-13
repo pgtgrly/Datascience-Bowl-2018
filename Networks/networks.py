@@ -2,14 +2,10 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-
-
-
-
-class network1(nn.Module):
+class Network1(nn.Module):
 
     def __init__(self):
-        super(network1,self).__init__()
+        super(Network1,self).__init__()
 
         #Input Tensor Dimensions = 64x64x3
         #Convolution 1
@@ -63,10 +59,6 @@ class network1(nn.Module):
         self.activ_6=nn.Sigmoid()
         ##Output Tensor Dimensions = 64x64x1
 
-        
-        
-
-
     def forward(self,x):
 
         out = self.conv1(x)
@@ -91,12 +83,10 @@ class network1(nn.Module):
         out=255*out
         return out
 
-
-
-class network2(nn.Module):
+class Network2(nn.Module):
 
     def __init__(self):
-        super(network2,self).__init__()
+        super(Network2,self).__init__()
 
         #Input Tensor Dimensions = 128x128x3
         #Convolution 1
@@ -151,10 +141,6 @@ class network2(nn.Module):
         nn.init.xavier_uniform(self.deconv3.weight)
         self.activ_6=nn.Sigmoid()
         ##Output Tensor Dimensions = 128x128x1
-
-        
-        
-
 
     def forward(self,x,network1_output):
 
@@ -243,10 +229,6 @@ class network3(nn.Module):
         nn.init.xavier_uniform(self.deconv3.weight)
         self.activ_6=nn.Sigmoid()
         ##Output Tensor Dimensions = 256x256x1
-
-        
-        
-
 
     def forward(self,x,network1_output,network2_output):
 
