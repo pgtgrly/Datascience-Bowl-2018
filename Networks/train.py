@@ -51,11 +51,14 @@ class ImageDataset(Dataset): #Defining the class to load datasets
         output_image=cv2.resize(output_image,(64,64), interpolation = cv2.INTER_CUBIC)
         output_image= output_image.reshape((64,64,1)).transpose((2, 0, 1))                                                                             
 
-        sample = {'image': input_image, 'masks': output_image, 'count':no_of_masks}  
+        sample = {'image': input_image, 'masks': output_image}  
 
         if self.transform:
             sample= self.transform(sample)
-
+        
+        #As transforms do not involve random crop, number of masks must stay the same
+        sample['count'] = no_of_masks
+        
         return sample
 
 train_dataset=ImageDataset(stage=1, input_dir="train",transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Training Dataset
