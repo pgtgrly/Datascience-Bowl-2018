@@ -24,7 +24,8 @@ learning_rate = 0.001
 train_directory="train"
 validation_directory=""
 test_directory=""
-checkpoints_directory="checkpoints"
+checkpoints_directory_network_1="checkpoints_network_1"
+checkpoints_directory_network_2="checkpoints_network_2"
 test_batch_size=50
 threshold=128
 
@@ -87,28 +88,24 @@ validation_loader = torch.utils.data.DataLoader(dataset=validation_dataset,
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-'''
-
-Load Network 1 from checkpoint in model_network_1
-
-'''
-
-
+# Loading Model 1
+checkpointsNet1= os.listdir(checkpoints_directory_network_1)
+model_network_1 = torch.load(checkpoints_directory_network_1+'/'+checkpointsNet1[-1])
 
 model=network2()
 iteri=0
 iter_new=0 
 
 #checking if checkpoints exist to resume training and create it if not
-if not os.path.exists(checkpoints_directory):
-    checkpoints = os.listdir(checkpoints_directory)
+if not os.path.exists(checkpoints_directory_network_2):
+    checkpoints = os.listdir(checkpoints_directory_network_2)
     checkpoints.sort(key=lambda x:int((x.split('_')[2]).split('.')[0]))
-    model=torch.load(checkpoints_directory+'/'+check[-1])
-    iteri=int(re.findall(r'\d+',check[-1])[0])
+    model=torch.load(checkpoints_directory_network_2+'/'+checkpoints[-1]) #changed to checkpoints
+    iteri=int(re.findall(r'\d+',checkpoints[-1])[0]) # changed to checkpoints
     iter_new=iteri
     print("Resuming from iteration " + str(iteri))
 else:
-    os.makedirs(checkpoints_directory)
+    os.makedirs(checkpoints_directory_network_2)
 
 if torch.cuda.is_available(): #use gpu if available
     model.cuda() 
@@ -126,20 +123,21 @@ for epoch in range(num_epochs):
         datapoint['image']=datapoint['image'].type(torch.FloatTensor) #typecasting to FloatTensor as it is compatible with CUDA
         datapoint['masks']=datapoint['masks'].type(torch.FloatTensor)
 
-        #input net 1 image from loader
+        datapoint['input_net_1']=datapoint['input_net_1'].type(torch.FloatTensor)
 
         if torch.cuda.is_available(): #move to gpu if available
                 input_image = Variable(datapoint['image'].cuda()) #Converting a Torch Tensor to Autograd Variable
                 output_image = Variable(datapoint['masks'].cuda())
+                input_image_net1 = Variable(datapoint['input_net_1']).cuda()
         else:
                 input_image = Variable(datapoint['image'])
                 output_image = Variable(datapoint['masks'])
+                input_image_net1 = Variable(datapoint['input_net_1'])
 
 
-
-        output_network_1=model_network_1()
+        output_network_1=model_network_1(input_image_net1)
         optimizer.zero_grad()  #https://discuss.pytorch.org/t/why-do-we-need-to-set-the-gradients-manually-to-zero-in-pytorch/4903/3
-        outputs = model(input_image)
+        outputs = model(input_image, output_network_1)
         loss = criterion(outputs, output_image)
         loss.backward() #Backprop
         optimizer.step()    #Weight update
@@ -153,17 +151,20 @@ for epoch in range(num_epochs):
             for j,datapoint_1 in enumerate(test_loader): #for testing
                 datapoint_1['input_image']=datapoint_1['input_image'].type(torch.FloatTensor)
                 datapoint_1['output_image']=datapoint_1['output_image'].type(torch.FloatTensor)
-           
+                datapoint_1['input_net_1']=datapoint_1['input_net_1'].type(torch.FloatTensor)
                 if torch.cuda.is_available():
                     input_image_1 = Variable(datapoint_1['input_image'].cuda())
                     output_image_1 = Variable(datapoint_1['output_image'].cuda())
+                    input_image_net1_1=Variable(datapoint_1['input_net_1']).cuda()
                 else:
                     input_image_1 = Variable(datapoint_1['input_image'])
                     output_image_1 = Variable(datapoint_1['output_image'])
+                    input_image_net1_1=Variable(datapoint_1['input_net_1'])
                 
                 # Forward pass only to get logits/output
-                outputs = model(input_image_1)
-                test_loss += criterion(outputs, output_image_1).data[0]
+                outputs_netwok_1_1 = model_network_1(input_image_net1_1)
+                outputs_1 = model(input_image_1, outputs_netwok_1_1)
+                test_loss += criterion(outputs_1, output_image_1).data[0]
                 total+=datapoint_1['output_image'].size(0)
             test_loss=test_loss/total   #sum of test loss for all test cases/total cases
             writer.add_scalar('Test Loss',test_loss, iteri) 
@@ -194,7 +195,7 @@ for epoch in range(num_epochs):
 
             '''
 
-            torch.save(model,'checkpoints/model_iter_'+str(iteri)+'.pt')
+            torch.save(model,'checkpoints_network_2/model_iter_'+str(iteri)+'.pt')
             
             # Alternative lower overhead save 
             # torch.save(model.state_dict(),'checkpoints/model_iter_'+str(iteri)+'.pt')
