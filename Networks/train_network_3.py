@@ -14,6 +14,7 @@ import time
 import glob
 import pandas as pd
 from Networks import network1
+from Networks import network2
 
 writer = SummaryWriter()
 
@@ -24,6 +25,8 @@ train_directory="train"
 validation_directory=""
 test_directory=""
 checkpoints_directory_network_1="checkpoints_network_1"
+checkpoints_directory_network_2="checkpoints_network_2"
+checkpoints_directory_network_3="checkpoints_network_3"
 test_batch_size=50
 threshold=128
 
@@ -41,17 +44,23 @@ class ImageDataset(Dataset): #Defining the class to load datasets
         img_id= self.dirlist[idx]
         
         input_image=cv2.imread(os.path.join(self.input_dir,img_id, "images", img_id + ".png"))
-        input_image=cv2.resize(input_image,(64,64), interpolation = cv2.INTER_CUBIC)
-        input_image= input_image.reshape((64,64,3)).transpose((2, 0, 1)) #The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
-        
+        input_image_net_1=input_image
+        input_image=cv2.resize(input_image,(256,256), interpolation = cv2.INTER_CUBIC)
+        input_image= input_image.reshape((256,256,3)).transpose((2, 0, 1)) #The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
+        input_image_net_2=cv2.resize(input_image,(128,128), interpolation = cv2.INTER_CUBIC)
+        input_image_net_2= input_image.reshape((128,128,3)).transpose((2, 0, 1)) #The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
+        input_image_net_1=cv2.resize(input_image_net_1,(64,64), interpolation = cv2.INTER_CUBIC)
+        input_image_net_1= input_image_net_1.reshape((64,64,3)).transpose((2, 0, 1))
+
+
         mask_path = glob.glob(os.path.join(self.input_dir,img_id) + "*.png")     
         no_of_masks = int(mask_path.split("_")[1])
 
         output_image=cv2.imread(mask_path)
-        output_image=cv2.resize(output_image,(64,64), interpolation = cv2.INTER_CUBIC)
-        output_image= output_image.reshape((64,64,1)).transpose((2, 0, 1))                                                                             
+        output_image=cv2.resize(output_image,(256,256), interpolation = cv2.INTER_CUBIC)
+        output_image= output_image.reshape((256,256,1)).transpose((2, 0, 1))                                                                             
 
-        sample = {'image': input_image, 'masks': output_image}  
+        sample = {'image': input_image, 'masks': output_image, 'input_net_1':input_image_net_1, 'input_net_2':input_image_net_2}  
 
         if self.transform:
             sample= self.transform(sample)
@@ -82,20 +91,26 @@ validation_loader = torch.utils.data.DataLoader(dataset=validation_dataset,
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-model=network1()
+# Loading Model 1
+checkpointsNet1= os.listdir(checkpoints_directory_network_1)
+model_network_1 = torch.load(checkpoints_directory_network_1+'/'+checkpointsNet1[-1])
+checkpointsNet2= os.listdir(checkpoints_directory_network_2)
+model_network_2 = torch.load(checkpoints_directory_network_2+'/'+checkpointsNet2[-1])
+
+model=network3()
 iteri=0
 iter_new=0 
 
 #checking if checkpoints exist to resume training and create it if not
-if not os.path.exists(checkpoints_directory_network_1):
-    checkpoints = os.listdir(checkpoints_directory_network_1)
+if not os.path.exists(checkpoints_directory_network_3):
+    checkpoints = os.listdir(checkpoints_directory_network_3)
     checkpoints.sort(key=lambda x:int((x.split('_')[2]).split('.')[0]))
-    model=torch.load(checkpoints_directory_network_1+'/'+checkpoints[-1]) # is this check or should it be checkpoints? changed it to checkpoints.
-    iteri=int(re.findall(r'\d+',checkpoints[-1])[0]) # Check or checkpoints? changed it to checkpoints.
+    model=torch.load(checkpoints_directory_network_3+'/'+checkpoints[-1]) #changed to checkpoints
+    iteri=int(re.findall(r'\d+',checkpoints[-1])[0]) # changed to checkpoints
     iter_new=iteri
     print("Resuming from iteration " + str(iteri))
 else:
-    os.makedirs(checkpoints_directory_network_1)
+    os.makedirs(checkpoints_directory_network_3)
 
 if torch.cuda.is_available(): #use gpu if available
     model.cuda() 
@@ -110,17 +125,28 @@ print("Training Started!")
 for epoch in range(num_epochs):
     print("\nEPOCH " +str(epoch+1)+" of "+str(num_epochs)+"\n")
     for i,datapoint in enumerate(train_loader):
-        datapoint['input_image']=datapoint['input_image'].type(torch.FloatTensor) #typecasting to FloatTensor as it is compatible with CUDA
-        datapoint['output_image']=datapoint['output_image'].type(torch.FloatTensor)
-        if torch.cuda.is_available(): #move to gpu if available
-                input_image = Variable(datapoint['input_image'].cuda()) #Converting a Torch Tensor to Autograd Variable
-                output_image = Variable(datapoint['output_image'].cuda())
-        else:
-                input_image = Variable(datapoint['input_image'])
-                output_image = Variable(datapoint['output_image'])
+        datapoint['image']=datapoint['image'].type(torch.FloatTensor) #typecasting to FloatTensor as it is compatible with CUDA
+        datapoint['masks']=datapoint['masks'].type(torch.FloatTensor)
 
+        datapoint['input_net_1']=datapoint['input_net_1'].type(torch.FloatTensor)
+        datapoint['input_net_2']=datapoint['input_net_2'].type(torch.FloatTensor)
+
+        if torch.cuda.is_available(): #move to gpu if available
+                input_image = Variable(datapoint['image'].cuda()) #Converting a Torch Tensor to Autograd Variable
+                output_image = Variable(datapoint['masks'].cuda())
+                input_image_net1 = Variable(datapoint['input_net_1']).cuda()
+                input_image_net2 = Variable(datapoint['input_net_2']).cuda()
+        else:
+                input_image = Variable(datapoint['image'])
+                output_image = Variable(datapoint['masks'])
+                input_image_net1 = Variable(datapoint['input_net_1'])
+                input_image_net2 = Variable(datapoint['input_net_2'])
+
+
+        output_network_1=model_network_1(input_image_net1)
+        output_network_2 = model_network_2(input_image_net2, output_network_1)
         optimizer.zero_grad()  #https://discuss.pytorch.org/t/why-do-we-need-to-set-the-gradients-manually-to-zero-in-pytorch/4903/3
-        outputs = model(input_image)
+        outputs = model(input_image, output_network_1, output_network_2)
         loss = criterion(outputs, output_image)
         loss.backward() #Backprop
         optimizer.step()    #Weight update
@@ -134,16 +160,23 @@ for epoch in range(num_epochs):
             for j,datapoint_1 in enumerate(test_loader): #for testing
                 datapoint_1['input_image']=datapoint_1['input_image'].type(torch.FloatTensor)
                 datapoint_1['output_image']=datapoint_1['output_image'].type(torch.FloatTensor)
-           
+                datapoint_1['input_net_1']=datapoint_1['input_net_1'].type(torch.FloatTensor)
+                datapoint_1['input_net_2']=datapoint_1['input_net_2'].type(torch.FloatTensor)
                 if torch.cuda.is_available():
                     input_image_1 = Variable(datapoint_1['input_image'].cuda())
                     output_image_1 = Variable(datapoint_1['output_image'].cuda())
+                    input_image_net1_1=Variable(datapoint_1['input_net_1']).cuda()
+                    input_image_net2_1=Variable(datapoint_1['input_net_2']).cuda()
                 else:
                     input_image_1 = Variable(datapoint_1['input_image'])
                     output_image_1 = Variable(datapoint_1['output_image'])
+                    input_image_net1_1=Variable(datapoint_1['input_net_1'])
+                    input_image_net2_1=Variable(datapoint_1['input_net_2'])
                 
                 # Forward pass only to get logits/output
-                outputs_1 = model(input_image_1)
+                outputs_netwok_1_1 = model_network_1(input_image_net1_1)
+                outputs_netwok_2_1 = model_network_2(input_image_net2_1, outputs_netwok_1_1)
+                outputs_1 = model(input_image_1, outputs_netwok_1_1, outputs_netwok_2_1)
                 test_loss += criterion(outputs_1, output_image_1).data[0]
                 total+=datapoint_1['output_image'].size(0)
             test_loss=test_loss/total   #sum of test loss for all test cases/total cases
@@ -175,7 +208,7 @@ for epoch in range(num_epochs):
 
             '''
 
-            torch.save(model,'checkpoints_network_1/model_iter_'+str(iteri)+'.pt')
+            torch.save(model,'checkpoints_network_3/model_iter_'+str(iteri)+'.pt')
             
             # Alternative lower overhead save 
             # torch.save(model.state_dict(),'checkpoints/model_iter_'+str(iteri)+'.pt')
