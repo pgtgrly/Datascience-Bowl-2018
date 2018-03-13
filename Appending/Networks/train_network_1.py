@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, utils
+from torchvision import transforms, utils #ver 0.2.0
 import re
 from tensorboardX import SummaryWriter
 import time
@@ -21,15 +21,15 @@ batch_size = 10 #mini-batch size
 n_iters = 50000 #total iterations
 learning_rate = 0.001
 train_directory="train"
-validation_directory=""
-test_directory=""
+validation_directory="validation"
+test_directory="test"
 checkpoints_directory_network_1="checkpoints_network_1"
 test_batch_size=50
 threshold=128
 
 class ImageDataset(Dataset): #Defining the class to load datasets
     def __init__(self,stage=1, input_dir='train',transform=None):
-        self.input_dir = os.path.join("data/stage", str(stage), input_dir)        
+        self.input_dir = os.path.join("data/stage"+str(stage), input_dir)        
         self.transform = transform
         self.dirlist = os.listdir(self.input_dir).sort()
 
@@ -61,9 +61,9 @@ class ImageDataset(Dataset): #Defining the class to load datasets
         
         return sample
 
-train_dataset=ImageDataset(stage=1, input_dir="train",transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Training Dataset
-test_dataset=ImageDataset(stage=1, input_dir="test",transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Testing Dataset
-validation_dataset=ImageDataset(stage=1, input_dir="validation",transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Validation Dataset
+train_dataset=ImageDataset(stage=1, input_dir=train_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Training Dataset
+test_dataset=ImageDataset(stage=1, input_dir=test_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Testing Dataset
+validation_dataset=ImageDataset(stage=1, input_dir=validation_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Validation Dataset
 
 num_epochs = n_iters / (len(train_dataset) / batch_size)
 num_epochs = int(num_epochs)
@@ -79,15 +79,13 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
 validation_loader = torch.utils.data.DataLoader(dataset=validation_dataset, 
                                           batch_size=test_batch_size, 
                                           shuffle=False)
-if not os.path.exists(directory):
-    os.makedirs(directory)
 
 model=network1()
 iteri=0
 iter_new=0 
 
 #checking if checkpoints exist to resume training and create it if not
-if not os.path.exists(checkpoints_directory_network_1):
+if  os.path.exists(checkpoints_directory_network_1):
     checkpoints = os.listdir(checkpoints_directory_network_1)
     checkpoints.sort(key=lambda x:int((x.split('_')[2]).split('.')[0]))
     model=torch.load(checkpoints_directory_network_1+'/'+checkpoints[-1]) # is this check or should it be checkpoints? changed it to checkpoints.

@@ -5,7 +5,7 @@ from torch.autograd import Variable
 class network1(nn.Module):
 
     def __init__(self):
-        super(Network1,self).__init__()
+        super(network1,self).__init__()
 
         #Input Tensor Dimensions = 64x64x3
         #Convolution 1
@@ -86,7 +86,7 @@ class network1(nn.Module):
 class network2(nn.Module):
 
     def __init__(self):
-        super(Network2,self).__init__()
+        super(network2,self).__init__()
 
         #Input Tensor Dimensions = 128x128x3
         #Convolution 1
@@ -159,7 +159,7 @@ class network2(nn.Module):
         out=self.activ_4(out)
         out=self.unpool1(out,indices2,size2)
 
-        out=torch.cat((out,network1_output),dim=0) #check if dim is correct
+        out=torch.cat((out,network1_output),dim=1) #check if dim is correct
 
         out=self.deconv2(out)
         out=self.activ_5(out)
@@ -243,13 +243,13 @@ class network3(nn.Module):
         out = self.conv3(out)
         out = self.activ_3(out)
 
-        out=torch.cat((out,network1_output),dim=0) #check if dim is correct
+        out=torch.cat((out,network1_output),dim=1) #check if dim is correct
         
         out=self.deconv1(out)
         out=self.activ_4(out)
         out=self.unpool1(out,indices2,size2)
 
-        out=torch.cat((out,network2_output),dim=0) #check if dim is correct
+        out=torch.cat((out,network2_output),dim=1) #check if dim is correct
 
         out=self.deconv2(out)
         out=self.activ_5(out)
