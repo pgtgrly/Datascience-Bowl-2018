@@ -145,7 +145,7 @@ for epoch in range(num_epochs):
                 outputs_1 = model(input_image_1)
                 test_loss += criterion(outputs_1, output_image_1).data[0]
                 total+=datapoint_1['masks'].size(0)
-            test_loss=test_loss/total   #sum of test loss for all test cases/total cases
+            test_loss=test_loss   #sum of test loss for all test cases/total cases
             writer.add_scalar('Test Loss',test_loss, iteri) 
             # Print Loss
             time_since_beg=(time.time()-beg)/60
