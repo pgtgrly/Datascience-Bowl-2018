@@ -27,7 +27,7 @@ test_directory="test"
 checkpoints_directory_network_1="checkpoints_network_1"
 test_batch_size=50
 threshold=128
-
+graphs_network_1_directory="graphs_network_1"
 class ImageDataset(Dataset): #Defining the class to load datasets
     def __init__(self,stage=1, input_dir='train',transform=None):
         self.input_dir = os.path.join("data/stage"+str(stage), input_dir)        
@@ -95,6 +95,9 @@ if  os.path.exists(checkpoints_directory_network_1) and len(os.listdir(checkpoin
     print("Resuming from iteration " + str(iteri))
 elif not os.path.exists(checkpoints_directory_network_1):
     os.makedirs(checkpoints_directory_network_1)
+
+if not os.path.exists(graphs_network_1_directory):
+    os.makedirs(graphs_network_1_directory)
 
 if torch.cuda.is_available(): #use gpu if available
     model.cuda() 
@@ -174,12 +177,12 @@ for epoch in range(num_epochs):
 
             '''
 
-            torch.save(model,'checkpoints_network_1/model_iter_'+str(iteri)+'.pt')
+            torch.save(model,checkpoints_directory_network_1+'/model_iter_'+str(iteri)+'.pt')
             
             # Alternative lower overhead save 
             # torch.save(model.state_dict(),'checkpoints/model_iter_'+str(iteri)+'.pt')
 
             print("model saved at iteration : "+str(iteri))
-            writer.export_scalars_to_json("graphs/all_scalars_"+str(iter_new)+".json") #saving loss vs iteration data to be used by visualise.py
+            writer.export_scalars_to_json(graphs_network_1_directory+"/all_scalars_"+str(iter_new)+".json") #saving loss vs iteration data to be used by visualise.py
     scheduler.step()            
 writer.close()
