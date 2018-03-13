@@ -130,10 +130,10 @@ for epoch in range(num_epochs):
         iteri=iteri+1
         if iteri % 10 == 0 or iteri==1:
             # Calculate Accuracy         
-            test_loss = 0
+            validation_loss = 0
             total = 0
             # Iterate through test dataset
-            for j,datapoint_1 in enumerate(test_loader): #for testing
+            for j,datapoint_1 in enumerate(validation_loader): #for testing
                 datapoint_1['image']=datapoint_1['image'].type(torch.FloatTensor)
                 datapoint_1['masks']=datapoint_1['masks'].type(torch.FloatTensor)
            
@@ -146,13 +146,13 @@ for epoch in range(num_epochs):
                 
                 # Forward pass only to get logits/output
                 outputs_1 = model(input_image_1)
-                test_loss += criterion(outputs_1, output_image_1).data[0]
+                validation_loss += criterion(outputs_1, output_image_1).data[0]
                 total+=datapoint_1['masks'].size(0)
-            test_loss=test_loss   #sum of test loss for all test cases/total cases
-            writer.add_scalar('Test Loss',test_loss, iteri) 
+            validation_loss=validation_loss   #sum of test loss for all test cases/total cases
+            writer.add_scalar('Validation Loss',validation_loss, iteri) 
             # Print Loss
             time_since_beg=(time.time()-beg)/60
-            print('Iteration: {}. Loss: {}. Test Loss: {}. Time(mins) {}'.format(iteri, loss.data[0], test_loss,time_since_beg))
+            print('Iteration: {}. Loss: {}. Validation Loss: {}. Time(mins) {}'.format(iteri, loss.data[0], validation_loss,time_since_beg))
         if iteri % 500 ==0:
             '''
             Apparently Optimizer saving is possible,but there is varied discussion
