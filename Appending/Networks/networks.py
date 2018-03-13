@@ -61,7 +61,7 @@ class network1(nn.Module):
 
     def forward(self,x):
 
-    	out_1_1 = x
+        out_1_1 = x
         out = self.conv1(x)
         out = self.activ_1(out)
         size1 = out.size()
@@ -155,7 +155,7 @@ class network2(nn.Module):
 
     def forward(self,x,network1_output):
 
-    	out_2_1 = x
+        out_2_1 = x
         out = self.conv1(x)
         out = self.activ_1(out)
         size1 = out.size()
@@ -168,8 +168,7 @@ class network2(nn.Module):
         out_2_3 = out
         out = self.conv3(out)
         out = self.activ_3(out)
-		
-		out=torch.cat((out,out_2_3),dim=1)        
+        out=torch.cat((out,out_2_3),dim=1)
         out=self.deconv1(out)
         out=self.activ_4(out)
         out=self.unpool1(out,indices2,size2)
@@ -249,7 +248,7 @@ class network3(nn.Module):
 
     def forward(self,x,network1_output,network2_output):
 
-    	out_3_1 = x
+        out_3_1 = x
         out = self.conv1(x)
         out = self.activ_1(out)
         size1 = out.size()
