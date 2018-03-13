@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-class Network1(nn.Module):
+class network1(nn.Module):
 
     def __init__(self):
         super(Network1,self).__init__()
@@ -83,7 +83,7 @@ class Network1(nn.Module):
         out=255*out
         return out
 
-class Network2(nn.Module):
+class network2(nn.Module):
 
     def __init__(self):
         super(Network2,self).__init__()

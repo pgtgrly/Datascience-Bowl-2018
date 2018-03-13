@@ -13,8 +13,8 @@ from tensorboardX import SummaryWriter
 import time
 import glob
 import pandas as pd
-from Networks import network1
-from Networks import network2
+from networks import network1
+from networks import network2
 
 writer = SummaryWriter()
 
