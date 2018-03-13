@@ -13,7 +13,7 @@ class network1(nn.Module):
         nn.init.xavier_uniform(self.conv1.weight) #Xaviers Initialisation
         self.activ_1= nn.ELU()
         #Pooling 1
-        self.pool1= nn.MaxPool2d(kernel_size=2)
+        self.pool1= nn.MaxPool2d(kernel_size=2, return_indices=True)
         #Output Tensor Dimensions = 32x32x16
 
 
@@ -23,7 +23,7 @@ class network1(nn.Module):
         nn.init.xavier_uniform(self.conv2.weight)
         self.activ_2 = nn.ELU()
         #Pooling 2
-        self.pool2 = nn.MaxPool2d(kernel_size=2)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, return_indices=True)
         #Output Tensor Dimensions = 16x16x32
 
         #Input Tensor Dimensions = 16x16x32
@@ -94,7 +94,7 @@ class network2(nn.Module):
         nn.init.xavier_uniform(self.conv1.weight) #Xaviers Initialisation
         self.activ_1= nn.ELU()
         #Pooling 1
-        self.pool1= nn.MaxPool2d(kernel_size=2)
+        self.pool1= nn.MaxPool2d(kernel_size=2,return_indices=True)
         #Output Tensor Dimensions = 64x64x16
 
 
@@ -104,7 +104,7 @@ class network2(nn.Module):
         nn.init.xavier_uniform(self.conv2.weight)
         self.activ_2 = nn.ELU()
         #Pooling 2
-        self.pool2 = nn.MaxPool2d(kernel_size=2)
+        self.pool2 = nn.MaxPool2d(kernel_size=2,return_indices=True)
         #Output Tensor Dimensions = 32x32x32
 
         #Input Tensor Dimensions = 32x32x32
@@ -180,7 +180,7 @@ class network3(nn.Module):
         nn.init.xavier_uniform(self.conv1.weight) #Xaviers Initialisation
         self.activ_1= nn.ELU()
         #Pooling 1
-        self.pool1= nn.MaxPool2d(kernel_size=2)
+        self.pool1= nn.MaxPool2d(kernel_size=2,return_indices=True)
         #Output Tensor Dimensions = 128x128x16
 
 
@@ -190,7 +190,7 @@ class network3(nn.Module):
         nn.init.xavier_uniform(self.conv2.weight)
         self.activ_2 = nn.ELU()
         #Pooling 2
-        self.pool2 = nn.MaxPool2d(kernel_size=2)
+        self.pool2 = nn.MaxPool2d(kernel_size=2,return_indices=True)
         #Output Tensor Dimensions = 64x64x32
 
         #Input Tensor Dimensions = 64x64x32
