@@ -216,7 +216,7 @@ class network3(nn.Module):
 
         #Input Tensor Dimensions = 128x128x33
         #De Convolution 2
-        self.deconv2=nn.ConvTranspose2d(in_channels=32,out_channels=16,kernel_size=3,padding=1)
+        self.deconv2=nn.ConvTranspose2d(in_channels=33,out_channels=16,kernel_size=3,padding=1)
         nn.init.xavier_uniform(self.deconv2.weight)
         self.activ_5=nn.ELU()
         #UnPooling 2
@@ -253,7 +253,7 @@ class network3(nn.Module):
 
         out=self.deconv2(out)
         out=self.activ_5(out)
-        out=self.munpool2(out,indices1,size1)
+        out=self.unpool2(out,indices1,size1)
         out=self.deconv3(out)
         out=self.activ_6(out)
         out=255*out
