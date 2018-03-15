@@ -17,6 +17,7 @@ import pandas as pd
 from networks import network1
 from networks import network2
 from networks import network3
+from data_augment import network3_augment
 
 writer = SummaryWriter()
 
@@ -63,24 +64,26 @@ class ImageDataset(Dataset): #Defining the class to load datasets
 
         masks=cv2.imread(mask_path[0],0)
         masks=cv2.resize(masks,(256,256), interpolation = cv2.INTER_CUBIC)
-        masks= masks.reshape((256,256))                                                                             
+        masks= masks.reshape((256,256,1))                                                                             
 
         sample = {'image': image, 'masks': masks, 'input_net_1':input_net_1, 'input_net_2':input_net_2}  
 
         if self.transform:
-            sample['image']= np.asarray(self.transform(Image.fromarray(sample['image']))).transpose((2, 0, 1))#The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
-            sample['input_net_1']= np.asarray(self.transform(Image.fromarray(sample['input_net_1']))).transpose((2, 0, 1))#The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
-            sample['input_net_2']= np.asarray(self.transform(Image.fromarray(sample['input_net_2']))).transpose((2, 0, 1))#The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
-            sample['masks']= np.asarray(self.transform(Image.fromarray(sample['masks']))).reshape((256,256,1)).transpose((2, 0, 1))
-        
+            sample=network3_augment(sample,vertical_prob=0.5,horizontal_prob=0.5)
+                    
         #As transforms do not involve random crop, number of masks must stay the same
         sample['count'] = no_of_masks
+        sample['image']= sample['image'].transpose((2, 0, 1))#The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
+        sample['input_net_1']= sample['input_net_1'].transpose((2, 0, 1))#The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
+        sample['input_net_2']= sample['input_net_2'].transpose((2, 0, 1))#The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
+        sample['masks']= sample['masks'].reshape((256,256,1)).transpose((2, 0, 1))
+
         
         return sample
 
-train_dataset=ImageDataset(stage=1, input_dir=train_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Training Dataset
-test_dataset=ImageDataset(stage=1, input_dir=test_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Testing Dataset
-validation_dataset=ImageDataset(stage=1, input_dir=validation_directory,transform=transforms.Compose([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()])) #Validation Dataset
+train_dataset=ImageDataset(stage=1, input_dir=train_directory,transform=True) #Training Dataset
+test_dataset=ImageDataset(stage=1, input_dir=test_directory,transform=False) #Testing Dataset
+validation_dataset=ImageDataset(stage=1, input_dir=validation_directory,transform=False) #Validation Dataset
 
 num_epochs = n_iters / (len(train_dataset) / batch_size)
 num_epochs = int(num_epochs)
