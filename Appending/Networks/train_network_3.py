@@ -102,7 +102,8 @@ checkpointsNet1= os.listdir(checkpoints_directory_network_1)
 model_network_1 = torch.load(checkpoints_directory_network_1+'/'+checkpointsNet1[-1])
 checkpointsNet2= os.listdir(checkpoints_directory_network_2)
 model_network_2 = torch.load(checkpoints_directory_network_2+'/'+checkpointsNet2[-1])
-
+model_network_1.eval()
+model_network_2.eval()
 model=network3()
 iteri=0
 iter_new=0 

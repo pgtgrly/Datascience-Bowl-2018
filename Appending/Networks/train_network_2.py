@@ -94,7 +94,7 @@ validation_loader = torch.utils.data.DataLoader(dataset=validation_dataset,
 # Loading Model 1
 checkpointsNet1= os.listdir(checkpoints_directory_network_1)
 model_network_1 = torch.load(checkpoints_directory_network_1+'/'+checkpointsNet1[-1])
-
+model_network_1.eval()
 model=network2()
 iteri=0
 iter_new=0
