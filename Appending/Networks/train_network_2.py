@@ -28,6 +28,7 @@ validation_directory="validation"
 test_directory="test"
 checkpoints_directory_network_1="checkpoints_network_1"
 checkpoints_directory_network_2="checkpoints_network_2"
+optimizer_checkpoints_directory_network_2="optimizer_checkpoints_network_2"
 graphs_network_2_directory="graphs_network_2"
 test_batch_size=50
 threshold=128
@@ -124,6 +125,14 @@ optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate) #optimizer cla
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1)# this will decrease the learning rate by factor of 0.1
                                                                               
                                                                               # https://discuss.pytorch.org/t/can-t-import-torch-optim-lr-scheduler/5138/6 
+if  os.path.exists(optimizer_checkpoints_directory_network_2) and len(os.listdir(optimizer_checkpoints_directory_network_2)):
+    checkpoints = os.listdir(optimizer_checkpoints_directory_network_2)
+    checkpoints.sort(key=lambda x:int((x.split('_')[2]).split('.')[0]))
+    optimizer.load_state_dict(torch.load(optimizer_checkpoints_directory_network_2+'/'+checkpoints[-1])) # is this check or should it be checkpoints? changed it to checkpoints.    print("Resuming optimizer")
+    print("Resuming Optimizer from iteration " + str(iteri))
+elif not os.path.exists(optimizer_checkpoints_directory_network_2):
+    os.makedirs(optimizer_checkpoints_directory_network_2)
+
 beg=time.time() #time at the beginning of training
 print("Training Started!")
 for epoch in range(num_epochs):
@@ -180,7 +189,7 @@ for epoch in range(num_epochs):
             # Print Loss
             time_since_beg=(time.time()-beg)/60
             print('Iteration: {}. Loss: {}. Validation Loss: {}. Time(mins) {}'.format(iteri, loss.data[0], validation_loss,time_since_beg))
-        if iteri % 500 ==0:
+        if iteri % 40 ==0:
             '''
             Apparently Optimizer saving is possible,but there is varied discussion
             on the issue with some suggestions that the recent update fixed this.
@@ -205,11 +214,12 @@ for epoch in range(num_epochs):
             '''
 
             torch.save(model,checkpoints_directory_network_2+'/model_iter_'+str(iteri)+'.pt')
-            
+            torch.save(optimizer.state_dict(),optimizer_checkpoints_directory_network_2+'/model_iter_'+str(iteri)+'.pt')
+
             # Alternative lower overhead save 
             # torch.save(model.state_dict(),'checkpoints/model_iter_'+str(iteri)+'.pt')
 
-            print("model saved at iteration : "+str(iteri))
+            print("model and optimizer saved at iteration : "+str(iteri))
             writer.export_scalars_to_json(graphs_network_2_directory+"/all_scalars_"+str(iter_new)+".json") #saving loss vs iteration data to be used by visualise.py
     scheduler.step()            
 writer.close()
