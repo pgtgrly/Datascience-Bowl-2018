@@ -189,7 +189,7 @@ for epoch in range(num_epochs):
             # Print Loss
             time_since_beg=(time.time()-beg)/60
             print('Iteration: {}. Loss: {}. Validation Loss: {}. Time(mins) {}'.format(iteri, loss.data[0], validation_loss,time_since_beg))
-        if iteri % 40 ==0:
+        if iteri % 500 ==0:
             '''
             Apparently Optimizer saving is possible,but there is varied discussion
             on the issue with some suggestions that the recent update fixed this.
