@@ -56,7 +56,7 @@ class network1(nn.Module):
         #DeConvolution 3
         self.deconv3=nn.ConvTranspose2d(in_channels=16,out_channels=1,kernel_size=5,padding=2)
         nn.init.xavier_uniform(self.deconv3.weight)
-        self.activ_6=nn.Sigmoid()
+        self.activ_6=nn.ReLU()
         ##Output Tensor Dimensions = 64x64x1
 
     def forward(self,x):
@@ -80,7 +80,6 @@ class network1(nn.Module):
         out=self.unpool2(out,indices1,size1)
         out=self.deconv3(out)
         out=self.activ_6(out)
-        out=255*out
         return out
 
 class network2(nn.Module):
@@ -139,7 +138,7 @@ class network2(nn.Module):
         #DeConvolution 3
         self.deconv3=nn.ConvTranspose2d(in_channels=16,out_channels=1,kernel_size=5,padding=2)
         nn.init.xavier_uniform(self.deconv3.weight)
-        self.activ_6=nn.Sigmoid()
+        self.activ_6=nn.ReLU()
         ##Output Tensor Dimensions = 128x128x1
 
     def forward(self,x,network1_output):
@@ -166,7 +165,6 @@ class network2(nn.Module):
         out=self.unpool2(out,indices1,size1)
         out=self.deconv3(out)
         out=self.activ_6(out)
-        out=255*out
         return out
 
 class network3(nn.Module):
@@ -227,7 +225,7 @@ class network3(nn.Module):
         #DeConvolution 3
         self.deconv3=nn.ConvTranspose2d(in_channels=16,out_channels=1,kernel_size=5,padding=2)
         nn.init.xavier_uniform(self.deconv3.weight)
-        self.activ_6=nn.Sigmoid()
+        self.activ_6=nn.ReLU()
         ##Output Tensor Dimensions = 256x256x1
 
     def forward(self,x,network1_output,network2_output):
@@ -256,6 +254,4 @@ class network3(nn.Module):
         out=self.unpool2(out,indices1,size1)
         out=self.deconv3(out)
         out=self.activ_6(out)
-        out=255*out
         return out
-

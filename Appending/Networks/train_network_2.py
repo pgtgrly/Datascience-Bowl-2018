@@ -20,9 +20,9 @@ from data_augment import network2_augment
 
 writer = SummaryWriter()
 
-batch_size = 10 #mini-batch size
+batch_size = 1 #mini-batch size
 n_iters = 50000 #total iterations
-learning_rate = 0.001
+learning_rate = 0.0001
 train_directory="train"
 validation_directory="validation"
 test_directory="test"
@@ -73,12 +73,19 @@ class ImageDataset(Dataset): #Defining the class to load datasets
         sample['input_net_1']= sample['input_net_1'].transpose((2, 0, 1))#The convolution function in pytorch expects data in format (N,C,H,W) N is batch size , C are channels H is height and W is width. here we convert image from (H,W,C) to (C,H,W)
         sample['masks']= sample['masks'].reshape((128,128,1)).transpose((2, 0, 1))
 
+        sample['image'].astype(float)
+        sample['image']=sample['image']/255
+        sample['masks'].astype(float)
+        sample['masks']=sample['masks']/255
+        sample['input_net_1'].astype(float)
+        sample['input_net_1']=sample['input_net_1']/255
+
         
         return sample
 
 train_dataset=ImageDataset(stage=1, input_dir=train_directory,transform=True) #Training Dataset
 test_dataset=ImageDataset(stage=1, input_dir=test_directory,transform=False) #Testing Dataset
-validation_dataset=ImageDataset(stage=1, input_dir=validation_directory,transform=False) #Validation Dataset
+validation_dataset=ImageDataset(stage=1, input_dir=validation_directory,transform=True) #Validation Dataset
 
 num_epochs = n_iters / (len(train_dataset) / batch_size)
 num_epochs = int(num_epochs)

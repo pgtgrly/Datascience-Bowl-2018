@@ -21,9 +21,9 @@ from networks import network1
 
 writer = SummaryWriter()
 
-batch_size = 10 #mini-batch size
+batch_size = 1 #mini-batch size  ##CHNAGED TO 1 from 10
 n_iters = 50000 #total iterations
-learning_rate = 0.001
+learning_rate = 0.0001   ## CHANGED TO 0.0001 from 0.001
 train_directory="train"
 validation_directory="validation"
 test_directory="test"
@@ -64,12 +64,17 @@ class ImageDataset(Dataset): #Defining the class to load datasets
         sample['count'] = no_of_masks
         sample['image'] = sample['image'].transpose((2, 0, 1))
         sample['masks'] = sample['masks'].reshape(64,64,1).transpose((2, 0, 1)) #Flip seems to squeeze the extra dimension
-        
+
+        sample['image'].astype(float)
+        sample['image']=sample['image']/255
+        sample['masks'].astype(float)
+        sample['masks']=sample['masks']/255
+
         return sample
 
 train_dataset=ImageDataset(stage=1, input_dir=train_directory,transform=True) #Training Dataset
 test_dataset=ImageDataset(stage=1, input_dir=test_directory,transform=False) #Testing Dataset
-validation_dataset=ImageDataset(stage=1, input_dir=validation_directory,transform=False) #Validation Dataset
+validation_dataset=ImageDataset(stage=1, input_dir=validation_directory,transform=True) #Validation Dataset
 
 num_epochs = n_iters / (len(train_dataset) / batch_size)
 num_epochs = int(num_epochs)
