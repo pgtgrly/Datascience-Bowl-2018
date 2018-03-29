@@ -112,8 +112,10 @@ validation_loader = torch.utils.data.DataLoader(dataset=validation_dataset,
 
 # Loading Model 1
 checkpointsNet1= os.listdir(checkpoints_directory_network_1)
+checkpointsNet1.sort(key=lambda x:int((x.split('_')[2]).split('.')[0]))
 model_network_1 = torch.load(checkpoints_directory_network_1+'/'+checkpointsNet1[-1])
 checkpointsNet2= os.listdir(checkpoints_directory_network_2)
+checkpointsNet2.sort(key=lambda x:int((x.split('_')[2]).split('.')[0]))
 model_network_2 = torch.load(checkpoints_directory_network_2+'/'+checkpointsNet2[-1])
 model_network_1.eval()
 model_network_2.eval()
